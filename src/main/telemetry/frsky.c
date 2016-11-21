@@ -38,6 +38,7 @@
 #include "drivers/sensor.h"
 #include "drivers/accgyro.h"
 #include "drivers/serial.h"
+#include "drivers/compass.h"
 
 #include "fc/runtime_config.h"
 #include "fc/config.h"
@@ -47,6 +48,7 @@
 #include "sensors/sensors.h"
 #include "sensors/acceleration.h"
 #include "sensors/gyro.h"
+#include "sensors/compass.h"
 #include "sensors/barometer.h"
 #include "../sensors/amperage.h"
 #include "sensors/battery.h"
@@ -115,6 +117,9 @@ extern int16_t telemTemperature1; // FIXME dependency on mw.c
 #define ID_GYRO_X             0x40
 #define ID_GYRO_Y             0x41
 #define ID_GYRO_Z             0x42
+#define ID_MAG_X              0x6A
+#define ID_MAG_Y              0x6B
+#define ID_MAG_Z              0x6C
 
 #define ID_VERT_SPEED         0x30 //opentx vario
 
@@ -163,6 +168,22 @@ static void sendAccel(void)
         sendDataHead(ID_ACC_X + i);
         serialize16(1000 * (int32_t)accSmooth[i] / acc.acc_1G);
     }
+}
+
+static void sendGyro(void)
+{
+	for (int i = 0; i < 3; i++) {
+		sendDataHead(ID_GYRO_X + i);
+		serialize16(gyroADC[i] * gyro.scale * (M_PIf / 180.0f));
+	}
+}
+
+static void sendMag(void)
+{
+	for (int i = 0; i < 3; i++) {
+		sendDataHead(ID_MAG_X + i);
+		serialize16(magADC[i]);
+	}
 }
 
 static void sendBaro(void)
@@ -509,6 +530,8 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
 
     // Sent every 125ms
     sendAccel();
+    sendGyro();
+    sendMag();
     sendVario();
     sendTelemetryTail();
 
@@ -520,6 +543,7 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
         sendTelemetryTail();
     }
 
+    /*
     if ((cycleNum % 8) == 0) {      // Sent every 1s
         sendTemperature1();
         sendThrottleOrBatterySizeAsRpm(deadband3d_throttle);
@@ -553,6 +577,7 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
         sendTime();
         sendTelemetryTail();
     }
+    */
 }
 
 #endif
