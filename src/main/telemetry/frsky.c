@@ -69,7 +69,7 @@ PG_REGISTER(frskyTelemetryConfig_t, frskyTelemetryConfig, PG_FRSKY_TELEMETRY_CON
 static serialPort_t *frskyPort = NULL;
 static serialPortConfig_t *portConfig;
 
-#define FRSKY_BAUDRATE 9600
+#define FRSKY_BAUDRATE 115200
 #define FRSKY_INITIAL_PORT_MODE MODE_TX
 
 static bool frskyTelemetryEnabled =  false;
@@ -78,7 +78,7 @@ static portSharing_e frskyPortSharing;
 extern int16_t telemTemperature1; // FIXME dependency on mw.c
 extern int16_t motor[MAX_SUPPORTED_MOTORS];
 
-#define CYCLETIME             125
+#define CYCLETIME             10
 
 #define PROTOCOL_HEADER       0x5E
 #define PROTOCOL_TAIL         0x5E
