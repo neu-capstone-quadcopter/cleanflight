@@ -56,6 +56,7 @@
 #include "io/serial.h"
 #include "io/gps.h"
 
+#include "flight/mixer.h"
 #include "flight/pid.h"
 #include "flight/imu.h"
 #include "flight/altitudehold.h"
@@ -75,6 +76,7 @@ static bool frskyTelemetryEnabled =  false;
 static portSharing_e frskyPortSharing;
 
 extern int16_t telemTemperature1; // FIXME dependency on mw.c
+extern int16_t motor[MAX_SUPPORTED_MOTORS];
 
 #define CYCLETIME             125
 
@@ -117,6 +119,10 @@ extern int16_t telemTemperature1; // FIXME dependency on mw.c
 #define ID_GYRO_X             0x40
 #define ID_GYRO_Y             0x41
 #define ID_GYRO_Z             0x42
+#define ID_MOTOR0_THRUST      0x60
+#define ID_MOTOR1_THRUST      0x61
+#define ID_MOTOR2_THRUST      0x62
+#define ID_MOTOR3_THRUST      0x63
 #define ID_MAG_X              0x6A
 #define ID_MAG_Y              0x6B
 #define ID_MAG_Z              0x6C
@@ -184,6 +190,15 @@ static void sendMag(void)
 		sendDataHead(ID_MAG_X + i);
 		serialize16(magADC[i]);
 	}
+}
+
+static void sendMotor(void)
+{
+	for(int i = 0; i < 4; i++){
+		sendDataHead(ID_MOTOR0_THRUST + i);
+		serialize16(motor[i]);
+	}
+
 }
 
 static void sendBaro(void)
@@ -530,6 +545,7 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
     sendAccel();
     sendGyro();
     sendMag();
+    sendMotor();
     sendVario();
     sendTelemetryTail();
 
