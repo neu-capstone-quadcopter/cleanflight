@@ -126,6 +126,9 @@ extern int16_t motor[MAX_SUPPORTED_MOTORS];
 #define ID_MAG_X              0x6A
 #define ID_MAG_Y              0x6B
 #define ID_MAG_Z              0x6C
+#define ID_PITCH              0x7A
+#define ID_ROLL               0x7B
+#define ID_YAW                0x7C
 
 #define ID_VERT_SPEED         0x30 //opentx vario
 
@@ -199,6 +202,16 @@ static void sendMotor(void)
 		serialize16(motor[i]);
 	}
 
+}
+
+static void sendAttitude(void)
+{
+	sendDataHead(ID_PITCH);
+	serialize16(attitude.values.pitch);
+	sendDataHead(ID_ROLL);
+	serialize16(attitude.values.roll);
+	sendDataHead(ID_YAW);
+	serialize16(attitude.values.yaw);
 }
 
 static void sendBaro(void)
@@ -469,14 +482,6 @@ static void sendFuelLevel(void)
     }
 }
 
-static void sendHeading(void)
-{
-    sendDataHead(ID_COURSE_BP);
-    serialize16(DECIDEGREES_TO_DEGREES(attitude.values.yaw));
-    sendDataHead(ID_COURSE_AP);
-    serialize16(0);
-}
-
 void initFrSkyTelemetry(void)
 {
     portConfig = findSerialPortConfig(FUNCTION_TELEMETRY_FRSKY);
@@ -541,57 +546,17 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
 
     cycleNum++;
 
-    // Sent every 125ms
+    // Sent every 10ms
     sendAccel();
     sendGyro();
     sendMag();
+    sendAttitude();
     sendMotor();
     sendVario();
+    if (lastCycleTime > DELAY_FOR_BARO_INITIALISATION) { //Allow 5s to boot correctly
+		sendBaro();
+	}
     sendTelemetryTail();
-
-    if ((cycleNum % 4) == 0) {      // Sent every 500ms
-        if (lastCycleTime > DELAY_FOR_BARO_INITIALISATION) { //Allow 5s to boot correctly
-            sendBaro();
-        }
-        sendHeading();
-        sendTelemetryTail();
-    }
-
-    /*
-    if ((cycleNum % 8) == 0) {      // Sent every 1s
-        sendTemperature1();
-        sendThrottleOrBatterySizeAsRpm(deadband3d_throttle);
-
-        if (feature(FEATURE_VBAT)) {
-            sendVoltage();
-            sendVoltageAmp();
-            sendAmperage();
-            sendFuelLevel();
-        }
-
-#ifdef GPS
-        if (sensors(SENSOR_GPS)) {
-            sendSpeed();
-            sendGpsAltitude();
-            sendSatalliteSignalQualityAsTemperature2();
-            sendGPSLatLong();
-        }
-        else {
-            sendFakeLatLongThatAllowsHeadingDisplay();
-        }
-#else
-        sendFakeLatLongThatAllowsHeadingDisplay();
-#endif
-
-        sendTelemetryTail();
-    }
-
-    if (cycleNum == 40) {     //Frame 3: Sent every 5s
-        cycleNum = 0;
-        sendTime();
-        sendTelemetryTail();
-    }
-    */
 }
 
 #endif
