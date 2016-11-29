@@ -180,7 +180,7 @@ static void sendGyro(void)
 {
 	for (int i = 0; i < 3; i++) {
 		sendDataHead(ID_GYRO_X + i);
-		serialize16(gyroADC[i] * gyro.scale * (M_PIf / 180.0f));
+		serialize16(gyroADC[i] * 1000 * gyro.scale);
 	}
 }
 
