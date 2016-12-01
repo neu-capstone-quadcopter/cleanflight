@@ -129,6 +129,10 @@ extern int16_t motor[MAX_SUPPORTED_MOTORS];
 #define ID_PITCH              0x7A
 #define ID_ROLL               0x7B
 #define ID_YAW                0x7C
+#define ID_CMD_PITCH          0x8A
+#define ID_CMD_ROLL           0x8B
+#define ID_CMD_YAW            0x8C
+#define ID_CMD_THROTTLE       0x8D
 
 #define ID_VERT_SPEED         0x30 //opentx vario
 
@@ -220,6 +224,18 @@ static void sendBaro(void)
     serialize16(BaroAlt / 100);
     sendDataHead(ID_ALTITUDE_AP);
     serialize16(ABS(BaroAlt % 100));
+}
+
+static void sendRcValues(void)
+{
+	sendDataHead(ID_CMD_PITCH);
+	serialize16(rcData[PITCH]);
+	sendDataHead(ID_CMD_ROLL);
+	serialize16(rcData[ROLL]);
+	sendDataHead(ID_CMD_YAW);
+	serialize16(rcData[YAW]);
+	sendDataHead(ID_CMD_THROTTLE);
+	serialize16(rcData[THROTTLE]);
 }
 
 #ifdef GPS
@@ -552,6 +568,7 @@ void handleFrSkyTelemetry(uint16_t deadband3d_throttle)
     sendMag();
     sendAttitude();
     sendMotor();
+    sendRcValues();
     sendVario();
     if (lastCycleTime > DELAY_FOR_BARO_INITIALISATION) { //Allow 5s to boot correctly
 		sendBaro();
